@@ -1,0 +1,22 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual envs
+venv/
+env/
+.venv/
+
+# Distribution/build
+build/
+dist/
+*.egg-info/
+
+# Tooling
+.vscode/
+.pytest_cache/
+
+# Secrets
+.env
+EOF
