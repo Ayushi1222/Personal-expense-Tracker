@@ -20,3 +20,4 @@ dist/
 # Secrets
 .env
 EOF
+seed_db.py
