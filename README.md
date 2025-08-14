@@ -22,7 +22,8 @@ The **Personal Finance Tracker API** helps users take control of their finances 
 - **Framework**: FastAPI
 - **Database**: Snowflake
 - **ORM**: SQLAlchemy
-- **Authentication**: JWT (optional)
+- **Authentication**: JWT
+- **Hashing**: bcrypt
 - **Environment**: venv
 
 ---
@@ -88,6 +89,8 @@ SNOWFLAKE_DATABASE=your_database
 SNOWFLAKE_SCHEMA=your_schema
 SNOWFLAKE_WAREHOUSE=your_warehouse
 JWT_SECRET=your_secret_key
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ```
 
 ### 5️⃣ Run the Application
@@ -95,7 +98,7 @@ JWT_SECRET=your_secret_key
 uvicorn main:app --reload
 ```
 
-The application will be available at `http://localhost:8000`
+The application will be available at `http://127.0.0.1:8000`
 
 ---
 
@@ -158,6 +161,3 @@ pytest
 ```
 
 ---
-
-## 📝 License
-This project is licensed under the MIT License.
