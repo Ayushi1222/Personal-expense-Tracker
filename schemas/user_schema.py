@@ -10,7 +10,19 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    created_at: datetime
+    is_active: bool
 
     class Config:
         orm_mode = True
+
+class UserUpdatePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+class UserListResponse(BaseModel):
+    title: str
+    data: list[User]
+
+class UserDetailResponse(BaseModel):
+    title: str
+    data: User

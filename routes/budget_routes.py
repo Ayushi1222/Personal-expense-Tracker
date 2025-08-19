@@ -5,7 +5,7 @@ from config.database import get_db
 from middleware.auth import get_current_user
 from controllers.budget_controller import create_budget, get_budget, list_budgets, update_budget, delete_budget
 from models.user import User
-from schemas.budget_schema import Budget as BudgetSchema
+from schemas.budget_schema import Budget as BudgetSchema, BudgetDictResponse, AllBudgetsResponse
 
 router = APIRouter()
 
@@ -22,11 +22,11 @@ def add_budget(body: BudgetIn, current_user: User = Depends(get_current_user), d
 def edit_budget(budget_id: int, body: BudgetIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return update_budget(db, current_user, budget_id, body.month, body.amount, body.category_id)
 
-@router.get("/", response_model=list[BudgetSchema])
+@router.get("/", response_model=AllBudgetsResponse)
 def read_all_budgets(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return list_budgets(db, current_user)
 
-@router.get("/{month}", response_model=list[BudgetSchema])
+@router.get("/{month}", response_model=BudgetDictResponse)
 def read_budget(month: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return get_budget(db, current_user, month)
 

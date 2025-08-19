@@ -1,18 +1,31 @@
 from pydantic import BaseModel
-from datetime import date
+from datetime import date, datetime
+from typing import List, Optional
 
 class ExpenseBase(BaseModel):
     amount: float
-    note: str | None = None
     date: date
+    note: Optional[str] = None
+    category_id: Optional[int] = None
 
 class ExpenseCreate(ExpenseBase):
-    category_id: int | None = None
+    pass
 
-class Expense(ExpenseBase):
+class ExpenseInDB(ExpenseBase):
     id: int
     user_id: int
-    category_id: int | None = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class PaginatedExpenseResponse(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    items: List[ExpenseInDB]
+
+class ExpenseResponse(BaseModel):
+    title: str
+    data: PaginatedExpenseResponse

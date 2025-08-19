@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Optional
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ def list_expenses(
     category_id: Optional[int] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None
-):
+) -> dict:
     q = db.query(Expense).filter(Expense.user_id == user.id)
 
     if category_id:
@@ -32,7 +32,15 @@ def list_expenses(
     total = q.count()
     items = q.offset((page - 1) * per_page).limit(per_page).all()
     
-    return {"total": total, "page": page, "per_page": per_page, "items": items}
+    return {
+        "title": "Expense List",
+        "data": {
+            "total": total, 
+            "page": page, 
+            "per_page": per_page, 
+            "items": items
+        }
+    }
 
 def create_expense(db: Session, user: User, amount: float, date_: date, note: str | None, category_id: int | None):
     try:
@@ -40,10 +48,11 @@ def create_expense(db: Session, user: User, amount: float, date_: date, note: st
         max_id_result = db.execute(text("SELECT COALESCE(MAX(id), 0) FROM expenses")).scalar_one()
         next_id = max_id_result + 1
 
+        now = datetime.now(timezone.utc)
         db.execute(
             text("""
-                INSERT INTO expenses (id, user_id, category_id, amount, note, date) 
-                VALUES (:id, :user_id, :category_id, :amount, :note, :date)
+                INSERT INTO expenses (id, user_id, category_id, amount, note, date, created_at, updated_at) 
+                VALUES (:id, :user_id, :category_id, :amount, :note, :date, :created_at, :updated_at)
             """),
             {
                 'id': next_id,
@@ -51,7 +60,9 @@ def create_expense(db: Session, user: User, amount: float, date_: date, note: st
                 'category_id': category_id,
                 'amount': amount,
                 'note': note,
-                'date': date_
+                'date': date_,
+                'created_at': now,
+                'updated_at': now
             }
         )
         db.commit()
@@ -113,46 +124,3 @@ def delete_expense(db: Session, user: User, expense_id: int):
     db.delete(exists)
     db.commit()
     return {"message": "Expense deleted successfully"}
-
-def monthly_summary(db: Session, user: User, month: str):
-    total = db.query(func.coalesce(func.sum(Expense.amount), 0)).filter(
-        Expense.user_id == user.id,
-        func.strftime('%Y-%m', Expense.date) if db.bind.url.get_backend_name() == "sqlite" else func.to_char(Expense.date, 'YYYY-MM') == month
-    )
-    if db.bind.url.get_backend_name() == "sqlite":
-        total_amount = db.query(func.coalesce(func.sum(Expense.amount), 0)).filter(
-            Expense.user_id == user.id,
-            func.strftime('%Y-%m', Expense.date) == month
-        ).scalar()
-    else:
-        total_amount = db.execute(
-            text("SELECT COALESCE(SUM(amount),0) FROM expenses WHERE user_id=:uid AND to_char(date,'YYYY-MM')=:m"),
-            {"uid": user.id, "m": month}
-        ).scalar_one()
-    return {"month": month, "total": float(total_amount or 0)}
-
-def monthly_summary_by_category(db: Session, user: User, month: str):
-    from models.category import Category
-
-    if db.bind.url.get_backend_name() == "sqlite":
-        date_filter = func.strftime('%Y-%m', Expense.date) == month
-    else: # Assuming snowflake/postgres
-        date_filter = func.to_char(Expense.date, 'YYYY-MM') == month
-
-    results = (
-        db.query(
-            Category.id,
-            Category.name,
-            func.coalesce(func.sum(Expense.amount), 0).label("total_amount")
-        )
-        .outerjoin(Expense, (Expense.category_id == Category.id) & (Expense.user_id == user.id) & date_filter)
-        .filter(Category.user_id == user.id)
-        .group_by(Category.id, Category.name)
-        .order_by(Category.name)
-        .all()
-    )
-
-    return [
-        {"category_id": r.id, "category_name": r.name, "total_amount": float(r.total_amount)}
-        for r in results
-    ]

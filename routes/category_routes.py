@@ -12,7 +12,7 @@ router = APIRouter()
 class CategoryIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
-@router.get("", response_model=list[CategorySchema])
+@router.get("", response_model=dict[int, CategorySchema])
 def get_categories(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return list_categories(db, current_user)
 
