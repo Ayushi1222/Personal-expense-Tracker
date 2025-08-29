@@ -11,3 +11,4 @@ email-validator==2.2.0
 snowflake-sqlalchemy==1.6.1
 snowflake-connector-python==3.12.3
 asyncio==3.4.3
+pandas==2.1.4

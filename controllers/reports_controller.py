@@ -1,4 +1,8 @@
 import asyncio
+import csv
+import io
+import pandas as pd
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text, select
 from models.expense import Expense
@@ -43,6 +47,50 @@ async def monthly_reports(db: Session, user: User, month: str):
             "top_spending_categories": top_categories
         }
     return await asyncio.to_thread(_report)
+
+async def generate_monthly_report_csv(db: Session, user: User, month: str):
+    report_data = await monthly_reports(db, user, month)
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    writer.writerow(['Month', report_data['month']])
+    writer.writerow(['Total Expenses', report_data['total_expenses']])
+    writer.writerow(['Total Transactions', report_data['total_transactions']])
+    writer.writerow(['Average Transaction Amount', report_data['average_transaction_amount']])
+    writer.writerow([]) # Empty line
+    
+    writer.writerow(['Top Spending Categories'])
+    writer.writerow(['Category', 'Total Spent'])
+    for category in report_data['top_spending_categories']:
+        writer.writerow([category['category'], category['total_spent']])
+        
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=monthly_report_{month}.csv"})
+
+async def generate_monthly_by_category_report_csv(db: Session, user: User, month: str):
+    report_data = await monthly_reports_by_category(db, user, month)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(['Month', report_data['month']])
+    writer.writerow(['Total Monthly Expenses', report_data['total_monthly_expenses']])
+    writer.writerow([])
+
+    writer.writerow(['Breakdown by Category'])
+    writer.writerow(['Category Name', 'Total Amount', 'Transaction Count', 'Percentage of Total Expenses'])
+
+    for item in report_data['breakdown_by_category'].values():
+        writer.writerow([
+            item['category_name'],
+            item['total_amount'],
+            item['transaction_count'],
+            item['percentage_of_total_expenses']
+        ])
+    
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=monthly_report_by_category_{month}.csv"})
 
 async def monthly_reports_by_category(db: Session, user: User, month: str):
     def _report_by_category():
@@ -90,3 +138,42 @@ async def monthly_reports_by_category(db: Session, user: User, month: str):
             "breakdown_by_category": report_by_category
         }
     return await asyncio.to_thread(_report_by_category)
+
+async def generate_monthly_report_csv2(db: Session, user: User, month: str):
+    report_data = await monthly_reports(db, user, month)
+    main_data = [
+        ['Month', report_data['month']],
+        ['Total Expenses', report_data['total_expenses']],
+        ['Total Transactions', report_data['total_transactions']],
+        ['Average Transaction Amount', report_data['average_transaction_amount']],
+    ]
+    top_categories = report_data['top_spending_categories']
+    categories_df = pd.DataFrame(top_categories)
+    output = io.StringIO()
+    pd.DataFrame(main_data).to_csv(output, header=False, index=False)
+    output.write('\n')
+    output.write('Top Spending Categories\n')
+    if not categories_df.empty:
+        categories_df.to_csv(output, index=False)
+    else:
+        output.write('No categories found\n')
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=monthly_report_{month}_csv2.csv"})
+
+async def generate_monthly_by_category_report_csv2(db: Session, user: User, month: str):
+    report_data = await monthly_reports_by_category(db, user, month)
+    main_data = [
+        ['Month', report_data['month']],
+        ['Total Monthly Expenses', report_data['total_monthly_expenses']],
+    ]
+    breakdown = list(report_data['breakdown_by_category'].values())
+    breakdown_df = pd.DataFrame(breakdown)
+    output = io.StringIO()
+    pd.DataFrame(main_data).to_csv(output, header=False, index=False)
+    output.write('\nBreakdown by Category\n')
+    if not breakdown_df.empty:
+        breakdown_df.to_csv(output, index=False)
+    else:
+        output.write('No category breakdown found\n')
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=monthly_report_by_category_{month}_csv2.csv"})
