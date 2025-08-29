@@ -13,18 +13,18 @@ class CategoryIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
 @router.get("", response_model=dict[int, CategorySchema])
-def get_categories(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return list_categories(db, current_user)
+async def get_categories(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await list_categories(db, current_user)
 
 @router.post("", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
-def add_category(body: CategoryIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return create_category(db, current_user, body.name)
+async def add_category(body: CategoryIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await create_category(db, current_user, body.name)
 
 @router.put("/{category_id}", response_model=CategorySchema)
-def edit_category(category_id: int, body: CategoryIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return update_category(db, user=current_user, category_id=category_id, name=body.name)
+async def edit_category(category_id: int, body: CategoryIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await update_category(db, user=current_user, category_id=category_id, name=body.name)
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-def remove_category(category_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    delete_category(db, current_user, category_id)
+async def remove_category(category_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    await delete_category(db, current_user, category_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

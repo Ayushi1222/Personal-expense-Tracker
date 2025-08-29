@@ -18,7 +18,7 @@ class ExpenseIn(BaseModel):
     category_id: int | None = None
 
 @router.get("", response_model=ExpenseResponse)
-def get_expenses(
+async def get_expenses(
     page: int = Query(1, ge=1), 
     per_page: int = Query(20, ge=1, le=100),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
@@ -27,12 +27,12 @@ def get_expenses(
     current_user: User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    return list_expenses(db, current_user, page, per_page, category_id, start_date, end_date)
+    return await list_expenses(db, current_user, page, per_page, category_id, start_date, end_date)
 
 @router.post("")
-def add_expense(body: ExpenseIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return create_expense(db, current_user, body.amount, body.date, body.note, body.category_id)
+async def add_expense(body: ExpenseIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await create_expense(db, current_user, body.amount, body.date, body.note, body.category_id)
 
 @router.delete("/{expense_id}")
-def remove_expense(expense_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return delete_expense(db, current_user, expense_id)
+async def remove_expense(expense_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await delete_expense(db, current_user, expense_id)

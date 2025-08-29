@@ -11,25 +11,25 @@ from models.user import User
 router = APIRouter()
 
 @router.post("/register")
-def register_user(body: RegisterIn, db: Session = Depends(get_db)):
-    return register(db, body.email, body.name, body.password)
+async def register_user(body: RegisterIn, db: Session = Depends(get_db)):
+    return await register(db, body.email, body.name, body.password)
 
 @router.post("/login")
-def login_user(body: LoginIn, db: Session = Depends(get_db)):
-    return login(db, body.email, body.password)
+async def login_user(body: LoginIn, db: Session = Depends(get_db)):
+    return await login(db, body.email, body.password)
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
-def request_password_reset(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    return forgot_password(db, body.email)
+async def request_password_reset(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    return await forgot_password(db, body.email)
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
-def handle_password_reset(body: ResetPasswordRequest, db: Session = Depends(get_db)):
-    return reset_password(db, body.token, body.new_password)
+async def handle_password_reset(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    return await reset_password(db, body.token, body.new_password)
 
 @router.put("/update-password", status_code=status.HTTP_200_OK)
-def update_user_password(
+async def update_user_password(
     body: UpdatePasswordIn, 
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    return update_password(db, current_user, body.current_password, body.new_password)
+    return await update_password(db, current_user, body.current_password, body.new_password)

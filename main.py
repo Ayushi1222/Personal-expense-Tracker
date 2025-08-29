@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from config.settings import settings
 from config.database import init_db
 from routes.auth_routes import router as auth_router
 from routes.user_routes import router as user_router
@@ -13,7 +12,7 @@ app = FastAPI(title="Personal Finance Tracker (PFT)",
 
 @app.on_event("startup")
 async def startup_event():
-    init_db()
+    await init_db()
 
 @app.get("/")
 async def read_root():

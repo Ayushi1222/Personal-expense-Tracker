@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config.settings import settings
@@ -5,14 +6,23 @@ from models.base import Base
 
 engine = create_engine(settings.DATABASE_URL)
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+    autocommit=False,
+    expire_on_commit=False,
+)
 
-def get_db():
-    db = SessionLocal()
+async def get_db():
+    session = SessionLocal()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        await asyncio.to_thread(session.close)
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
+
+async def init_db():
+    def _init():
+        Base.metadata.create_all(bind=engine)
+
+    await asyncio.to_thread(_init)

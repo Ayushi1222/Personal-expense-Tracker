@@ -9,9 +9,9 @@ from schemas.report_schema import MonthlyReport, MonthlyReportByCategory
 router = APIRouter()
 
 @router.get("/summary/{month}", response_model=MonthlyReport)
-def get_reports_summary(month: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return monthly_reports(db, current_user, month)
+async def get_reports_summary(month: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await monthly_reports(db, current_user, month)
 
 @router.get("/summary-by-category/{month}", response_model=MonthlyReportByCategory)
-def get_reports_summary_by_category(month: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return monthly_reports_by_category(db, current_user, month)
+async def get_reports_summary_by_category(month: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await monthly_reports_by_category(db, current_user, month)

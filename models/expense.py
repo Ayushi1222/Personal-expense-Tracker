@@ -11,9 +11,9 @@ class Expense(Base):
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     note: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now()) # pylint: disable=not-callable
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now()) # pylint: disable=not-callable
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now()) # pylint: disable=not-callable
 
     user = relationship("User", back_populates="expenses")
     category = relationship("Category", back_populates="expenses")
